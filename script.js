@@ -93,6 +93,17 @@ const statusText = document.getElementById("statusText");
 const emptyState = document.getElementById("emptyState");
 const toast = document.getElementById("toast");
 
+const spotlightCard = document.getElementById("spotlightCard");
+const spotlightImage = document.getElementById("spotlightImage");
+const spotlightName = document.getElementById("spotlightName");
+const spotlightBadge = document.getElementById("spotlightBadge");
+
+const successModal = document.getElementById("successModal");
+const closeSuccessBtn = document.getElementById("closeSuccessBtn");
+const successShareBtn = document.getElementById("successShareBtn");
+const copyInviteBtn = document.getElementById("copyInviteBtn");
+const successBadge = document.getElementById("successBadge");
+
 const claimModal = document.getElementById("claimModal");
 const pixelModal = document.getElementById("pixelModal");
 
@@ -333,6 +344,69 @@ function showToast(message) {
   showToast.timer = setTimeout(() => toast.classList.add("hidden"), 3000);
 }
 
+
+function getPixelRank(pixel) {
+  const index = pixels.findIndex((p) => p.id === pixel?.id);
+  return index >= 0 ? index + 1 : pixels.length;
+}
+
+function getPixelBadge(pixel) {
+  const rank = getPixelRank(pixel);
+
+  if (rank <= 10) return "Genesis Pixel";
+  if (rank <= 100) return "First 100";
+  if (rank <= 1000) return "OG Pixel";
+  return "UNO Pixel";
+}
+
+function getRemainingPixels() {
+  const max = typeof MAX_PIXELS !== "undefined" ? MAX_PIXELS : 10000;
+  return Math.max(0, max - pixels.length);
+}
+
+function updateGrowthUI() {
+  const max = typeof MAX_PIXELS !== "undefined" ? MAX_PIXELS : 10000;
+  const el = document.getElementById("claimedCount");
+
+  if (el) {
+    el.textContent = `${pixels.length} / ${max} claimed`;
+  }
+
+  if (pixels.length > 0 && spotlightCard && spotlightImage && spotlightName) {
+    const dayIndex = Math.floor(Date.now() / 86400000) % pixels.length;
+    const pixel = pixels[dayIndex];
+    spotlightImage.src = pixel.image_url;
+    spotlightName.textContent = pixel.nickname || "anonymous";
+    spotlightBadge.textContent = getPixelBadge(pixel);
+    spotlightCard.classList.remove("hidden");
+  }
+}
+
+function openSuccessModal(pixel) {
+  if (!successModal) return;
+
+  selectedPixel = pixel || selectedPixel;
+
+  if (successBadge && selectedPixel) {
+    const rank = getPixelRank(selectedPixel);
+    successBadge.textContent = `${getPixelBadge(selectedPixel)} • #${String(rank).padStart(3, "0")} • ${getRemainingPixels()} spaces left`;
+  }
+
+  successModal.classList.remove("hidden");
+}
+
+async function copyInviteText() {
+  const url = selectedPixel?.id ? `${location.origin}/pixel/${selectedPixel.id}` : location.href;
+  const text = `I claimed my UNO pixel. One pixel per person. Forever.\n\n${url}`;
+
+  try {
+    await navigator.clipboard.writeText(text);
+    showToast("Invite copied.");
+  } catch (error) {
+    showToast("Copy failed. You can still share your pixel manually.");
+  }
+}
+
 function openClaim() {
   if (myClaim) {
     showToast("You already claimed your UNO pixel from this browser.");
@@ -475,6 +549,7 @@ async function loadPixels() {
 
   pixels = data || [];
   claimedCount.textContent = pixels.length;
+  updateGrowthUI();
   emptyState.classList.toggle("show", pixels.length === 0);
   statusText.textContent = "Live";
   preloadImages();
@@ -490,6 +565,8 @@ function subscribeRealtime() {
       payload => {
         pixels.push(payload.new);
         claimedCount.textContent = pixels.length;
+        updateGrowthUI();
+  updateGrowthUI();
         emptyState.classList.toggle("show", pixels.length === 0);
         preloadImages();
         render();
@@ -642,6 +719,7 @@ const file = imageInput.files?.[0];
     closeClaim();
     await loadPixels();
     await checkMyClaim();
+    openSuccessModal(insertedPixel || selectedPixel);
     showToast("Pixel claimed globally.");
   } catch (err) {
     console.error(err);
@@ -676,7 +754,10 @@ function openPixel(p) {
   pixelPreview.src = p.image_url;
   pixelName.textContent = p.nickname || "anonymous";
   pixelMessage.textContent = p.message || "No message.";
-  pixelDate.textContent = p.created_at ? new Date(p.created_at).toLocaleString() : "";
+  const rank = getPixelRank(p);
+  const badge = getPixelBadge(p);
+  const dateText = p.created_at ? new Date(p.created_at).toLocaleString() : "";
+  pixelDate.innerHTML = `${dateText}<br><span class="pixel-rank-badge">${badge} • #${String(rank).padStart(3, "0")} • ${getRemainingPixels()} spaces left</span>`;
   pixelModal.classList.remove("hidden");
 }
 
@@ -696,7 +777,7 @@ function randomJourney() {
 function shareSelectedPixel() {
   if (!selectedPixel) return;
 
-  const text = encodeURIComponent("I claimed my UNO pixel. One pixel per person. Forever.");
+  const text = encodeURIComponent("I claimed my UNO pixel. One pixel per person. Forever. Claim yours before the canvas fills.");
   const shareUrl = selectedPixel.id
     ? `${location.origin}/pixel/${selectedPixel.id}`
     : location.href;
@@ -775,6 +856,9 @@ claimBtn.addEventListener("click", claimPixel);
 
 closePixelBtn.addEventListener("click", () => pixelModal.classList.add("hidden"));
 shareBtn.addEventListener("click", shareSelectedPixel);
+if (closeSuccessBtn) closeSuccessBtn.addEventListener("click", () => successModal.classList.add("hidden"));
+if (successShareBtn) successShareBtn.addEventListener("click", shareSelectedPixel);
+if (copyInviteBtn) copyInviteBtn.addEventListener("click", copyInviteText);
 randomBtn.addEventListener("click", randomJourney);
 
 canvas.addEventListener("mousedown", e => {
@@ -866,6 +950,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   await loadPixels();
   await checkMyClaim();
+  updateGrowthUI();
   subscribeRealtime();
 });
 
