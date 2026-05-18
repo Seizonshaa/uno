@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>UNO — One pixel per person. Forever.</title>
+
+  <meta name="description" content="UNO is a living digital canvas. Claim one pixel and leave your mark forever." />
+  <meta property="og:title" content="UNO — One pixel per person. Forever." />
+  <meta property="og:description" content="Claim your visual pixel on UNO." />
+  <meta property="og:type" content="website" />
+  <meta property="og:image" content="preview.png" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="UNO — One pixel per person. Forever." />
+  <meta name="twitter:description" content="Claim your visual pixel on UNO." />
+  <meta name="twitter:image" content="preview.png" />
+
+  <link rel="stylesheet" href="style.css" />
+  <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+  <div class="background-grid"></div>
+  <div class="orb orb-one"></div>
+  <div class="orb orb-two"></div>
+
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo">UNO</div>
+      <span>one pixel per person. forever.</span>
+    </div>
+
+    <div class="stats">
+      <span id="statusText">Connecting...</span>
+      <strong><span id="claimedCount">0</span> claimed</strong>
+    </div>
+
+    <div class="actions">
+      <button id="randomBtn" class="ghost-btn">Random Journey</button>
+      <button id="claimOpenBtn" class="primary-btn">Claim Pixel</button>
+    </div>
+  </header>
+
+  <main class="stage">
+    <canvas id="unoCanvas"></canvas>
+
+    <div class="hint">
+      <span>Drag to move</span>
+      <span>Scroll to zoom</span>
+      <span>Click a pixel</span>
+    </div>
+
+    <div id="emptyState" class="empty-state">
+      <h1>UNO</h1>
+      <p>The wall is waiting for its first real claim.</p>
+      <button id="emptyClaimBtn" class="primary-btn">Claim the first pixel</button>
+    </div>
+  </main>
+
+  <div id="claimModal" class="modal hidden">
+    <div class="modal-card">
+      <button class="close-btn" id="closeClaimBtn">×</button>
+      <p class="eyebrow">claim your mark</p>
+      <h2>One pixel. Forever.</h2>
+
+      <label class="upload-box" id="uploadBox" for="imageInput">
+        <input id="imageInput" type="file" accept="image/*" />
+        <img id="imagePreview" class="image-preview hidden" alt="Selected image preview" />
+        <span id="uploadText">Choose an image or drag it here</span>
+      </label>
+
+      <input id="nicknameInput" maxlength="40" placeholder="Nickname optional" />
+      <textarea id="messageInput" maxlength="120" placeholder="Short message optional"></textarea>
+
+      <button id="claimBtn" class="primary-btn full">Claim Pixel</button>
+      <small id="claimNote">Images are saved globally in Supabase.</small>
+    </div>
+  </div>
+
+  <div id="pixelModal" class="modal hidden">
+    <div class="modal-card pixel-card">
+      <button class="close-btn" id="closePixelBtn">×</button>
+      <img id="pixelPreview" alt="Claimed pixel" />
+      <h2 id="pixelName">anonymous</h2>
+      <p id="pixelMessage"></p>
+      <small id="pixelDate"></small>
+      <button id="shareBtn" class="ghost-btn full">Share on X</button>
+    </div>
+  </div>
+
+  <div id="toast" class="toast hidden"></div>
+
+  <script defer src="script.js?v=vercel1"></script>
+</body>
+</html>
