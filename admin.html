@@ -1,13 +1,1 @@
-<!doctype html>
-<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>UNO Admin</title><link rel="stylesheet" href="style.css">
-<style>
-body{overflow:auto;min-height:100vh;padding:28px;background:#05070c;color:white}.wrap{max-width:980px;margin:auto}.logo{font-size:46px;font-weight:950;letter-spacing:-.08em}.card{border:1px solid rgba(255,255,255,.12);background:rgba(12,15,24,.85);border-radius:28px;padding:22px;margin:16px 0}.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}input,textarea,select{width:100%;margin:0 0 12px;border-radius:16px;border:1px solid rgba(255,255,255,.12);background:rgba(0,0,0,.25);color:white;padding:13px;font:inherit}.drop{border:1px dashed rgba(255,255,255,.25);border-radius:22px;padding:34px;text-align:center;color:#a3a8ba;cursor:pointer}.drop.drag{border-color:#22d3ee;background:rgba(34,211,238,.08)}.drop input{display:none}.queue{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px}.item{border:1px solid rgba(255,255,255,.12);border-radius:20px;padding:10px;background:rgba(255,255,255,.045)}.item img{width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:15px}.row{display:flex;gap:10px;flex-wrap:wrap}.danger{background:rgba(255,91,122,.12);border:1px solid rgba(255,91,122,.28);color:#ff8ca1}.note{color:#a3a8ba;line-height:1.6}@media(max-width:760px){.grid{grid-template-columns:1fr}}
-</style></head>
-<body><main class="wrap">
-<div class="logo">UNO</div><p class="note">Admin panel for manual X/Twitter uploads</p>
-<section class="card"><h2>Admin access</h2><input id="adminSecret" type="password" placeholder="Admin secret from Vercel"></section>
-<section class="card"><h2>Add manual pixels</h2><div class="grid"><label class="drop" id="dropzone"><input id="files" type="file" accept="image/*" multiple>Drop images here or click to select multiple</label><div><input id="nickname" placeholder="Default nickname / @username"><textarea id="message" placeholder="Default message"></textarea><select id="source"><option value="manual-x">Manual X / Twitter</option><option value="telegram">Telegram</option><option value="admin">Admin upload</option></select><div class="row"><button id="upload" class="primary-btn">Upload all</button><button id="clear" class="ghost-btn danger">Clear</button></div></div></div><div id="queue" class="queue"></div></section>
-<section class="card"><h2>Manual X flow</h2><p class="note">Save images from people who tag @UNOpixels, upload them here, add username/message, then reply with the generated pixel link.</p></section>
-<div id="toast" class="toast hidden"></div>
-</main><script src="admin.js?v=1"></script></body></html>
+admin page
