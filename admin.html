@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>UNO Admin</title>
+<style>
+body{background:#05070c;color:white;font-family:Arial,sans-serif;padding:30px;margin:0}
+.container{max-width:1000px;margin:auto}
+h1{font-size:42px;letter-spacing:-.04em}
+.box{background:#10131d;padding:20px;border-radius:20px;margin-top:20px;border:1px solid rgba(255,255,255,.08)}
+input,textarea{width:100%;box-sizing:border-box;padding:12px;margin-top:10px;background:#1a1e29;border:1px solid rgba(255,255,255,.08);border-radius:10px;color:white}
+button{margin-top:15px;padding:14px 20px;background:#8b5cf6;color:white;border:none;border-radius:10px;cursor:pointer;font-weight:800}
+button.secondary{background:#1a1e29}
+button.danger{background:#b91c1c}
+#preview,#pixels{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:15px;margin-top:20px}
+.card{background:#0b0e16;border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:10px}
+img{width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:12px}
+small{color:#9ca3af;word-break:break-all}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+.status{color:#9ca3af;margin-top:10px}
+a{color:#22d3ee}
+</style>
+</head>
+<body>
+<div class="container">
+<h1>UNO Admin</h1>
+<p class="status"><a href="/">Back to UNO</a></p>
+
+<div class="box">
+<h2>Upload Pixel</h2>
+<input id="secret" placeholder="Admin Secret" type="password">
+<input id="files" type="file" multiple accept="image/*">
+<input id="name" placeholder="@username">
+<textarea id="message" placeholder="message"></textarea>
+<button onclick="upload()">Upload To UNO</button>
+<div id="preview"></div>
+</div>
+
+<div class="box">
+<h2>Delete / Manage Pixels</h2>
+<p class="status">Enter admin secret above, then load recent pixels.</p>
+<div class="row">
+<button class="secondary" onclick="loadPixels()">Load Recent Pixels</button>
+<input id="deleteId" placeholder="Paste pixel ID to delete manually">
+<button class="danger" onclick="deletePixelByInput()">Delete Pixel ID</button>
+</div>
+<div id="pixels"></div>
+</div>
+</div>
+
+<script>
+const files=document.getElementById("files");
+const preview=document.getElementById("preview");
+const pixelsEl=document.getElementById("pixels");
+
+files.addEventListener("change",()=>{
+  preview.innerHTML="";
+  Array.from(files.files).forEach(file=>{
+    let reader=new FileReader();
+    reader.onload=e=>{ preview.innerHTML+=`<img src="${e.target.result}">`; };
+    reader.readAsDataURL(file);
+  });
+});
+
+async function upload(){
+  let secret=document.getElementById("secret").value;
+  let username=document.getElementById("name").value;
+  let message=document.getElementById("message").value;
+  let items=[];
+
+  for(let file of files.files){
+    let data=await fileToBase64(file);
+    items.push({name:file.name,imageData:data,nickname:username,message:message,source:"manual-x"});
+  }
+
+  let r=await fetch("/api/admin-claim",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({secret,items})
+  });
+
+  let d=await r.json();
+  if(d.created){
+    alert(`Uploaded ${d.created.length} pixel(s)`);
+    await loadPixels();
+  } else {
+    alert(JSON.stringify(d));
+  }
+}
+
+async function loadPixels(){
+  const secret=document.getElementById("secret").value;
+  if(!secret){ alert("Enter admin secret first"); return; }
+
+  const r=await fetch(`/api/admin-list?secret=${encodeURIComponent(secret)}`);
+  const d=await r.json();
+
+  if(!d.pixels){ alert(JSON.stringify(d)); return; }
+
+  pixelsEl.innerHTML=d.pixels.map(p=>`
+    <div class="card">
+      <img src="${p.image_url}">
+      <b>${escapeHtml(p.nickname || "anonymous")}</b><br>
+      <small>${escapeHtml(p.message || "")}</small><br>
+      <small>ID: ${p.id}</small><br>
+      <small><a href="/pixel/${p.id}" target="_blank">Open Pixel</a></small>
+      <button class="danger" onclick="deletePixel('${p.id}')">Delete</button>
+    </div>
+  `).join("");
+}
+
+async function deletePixelByInput(){
+  const id=document.getElementById("deleteId").value.trim();
+  if(!id){ alert("Paste a pixel ID first"); return; }
+  await deletePixel(id);
+}
+
+async function deletePixel(id){
+  const secret=document.getElementById("secret").value;
+  if(!secret){ alert("Enter admin secret first"); return; }
+
+  if(!confirm("Delete this pixel permanently?")) return;
+
+  const r=await fetch("/api/admin-delete",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({secret,id})
+  });
+
+  const d=await r.json();
+
+  if(d.deleted){
+    alert("Pixel deleted");
+    await loadPixels();
+  } else {
+    alert(JSON.stringify(d));
+  }
+}
+
+function fileToBase64(file){
+  return new Promise(resolve=>{
+    let reader=new FileReader();
+    reader.onload=e=>resolve(e.target.result);
+    reader.readAsDataURL(file);
+  });
+}
+
+function escapeHtml(value=""){
+  return String(value).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;");
+}
+</script>
+</body>
+</html>
