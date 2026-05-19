@@ -1,1 +1,186 @@
-admin page
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>UNO Admin</title>
+
+<style>
+body{
+background:#05070c;
+color:white;
+font-family:Arial,sans-serif;
+padding:30px;
+margin:0
+}
+
+.container{
+max-width:900px;
+margin:auto
+}
+
+.box{
+background:#10131d;
+padding:20px;
+border-radius:20px;
+margin-top:20px
+}
+
+input,textarea{
+width:100%;
+padding:12px;
+margin-top:10px;
+background:#1a1e29;
+border:none;
+border-radius:10px;
+color:white
+}
+
+button{
+margin-top:15px;
+padding:14px 20px;
+background:#8b5cf6;
+color:white;
+border:none;
+border-radius:10px;
+cursor:pointer
+}
+
+#preview{
+display:grid;
+grid-template-columns:repeat(auto-fill,minmax(150px,1fr));
+gap:15px;
+margin-top:20px
+}
+
+img{
+width:100%;
+border-radius:15px
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>UNO Admin</h1>
+
+<div class="box">
+
+<input
+id="secret"
+placeholder="Admin Secret"
+/>
+
+<input
+id="files"
+type="file"
+multiple
+accept="image/*"
+/>
+
+<input
+id="name"
+placeholder="@username"
+/>
+
+<textarea
+id="message"
+placeholder="message"
+></textarea>
+
+<button onclick="upload()">
+Upload To UNO
+</button>
+
+<div id="preview"></div>
+
+</div>
+
+</div>
+
+<script>
+
+const files=document.getElementById("files")
+const preview=document.getElementById("preview")
+
+files.addEventListener("change",()=>{
+
+preview.innerHTML=""
+
+Array.from(files.files).forEach(file=>{
+
+let reader=new FileReader()
+
+reader.onload=e=>{
+
+preview.innerHTML+=`
+<img src="${e.target.result}">
+`
+
+}
+
+reader.readAsDataURL(file)
+
+})
+
+})
+
+async function upload(){
+
+let secret=document.getElementById("secret").value
+let username=document.getElementById("name").value
+let message=document.getElementById("message").value
+
+let items=[]
+
+for(let file of files.files){
+
+let data=await fileToBase64(file)
+
+items.push({
+name:file.name,
+imageData:data,
+nickname:username,
+message:message,
+source:"manual-x"
+})
+
+}
+
+let r=await fetch("/api/admin-claim",{
+method:"POST",
+headers:{
+"Content-Type":"application/json"
+},
+body:JSON.stringify({
+secret,
+items
+})
+})
+
+let d=await r.json()
+
+alert(JSON.stringify(d))
+
+}
+
+function fileToBase64(file){
+
+return new Promise(resolve=>{
+
+let reader=new FileReader()
+
+reader.onload=e=>resolve(e.target.result)
+
+reader.readAsDataURL(file)
+
+})
+
+}
+
+</script>
+
+</body>
+</html>
