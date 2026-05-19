@@ -1,1 +1,1 @@
-console.log('admin')
+const f=document.getElementById('files');const p=document.getElementById('preview');f.onchange=()=>{p.innerHTML='';[...f.files].forEach(x=>{let i=document.createElement('img');i.src=URL.createObjectURL(x);i.style.width='120px';i.style.margin='10px';p.appendChild(i)})}
